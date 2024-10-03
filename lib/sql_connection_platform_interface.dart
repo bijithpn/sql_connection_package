@@ -23,7 +23,25 @@ abstract class SqlConnectionPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
-  }
+  /// Connects to the SQL Server database.
+  ///
+  /// The required parameters are the IP address, port, database name,
+  /// username, password, and an optional timeout in seconds.
+  Future<bool> connect({
+    required String ip,
+    required String port,
+    required String databaseName,
+    required String username,
+    required String password,
+    int timeoutInSeconds = 15,
+  });
+
+  /// Retrieves data from the database using the specified SQL query.
+  Future<String> getData(String query);
+
+  /// Writes data to the database using the specified SQL query.
+  Future<String> writeData(String query);
+
+  /// Disconnects from the MS SQL Server database.
+  Future<bool> disconnect();
 }
