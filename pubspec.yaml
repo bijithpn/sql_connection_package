@@ -1,5 +1,5 @@
 name: sql_connection
-description: "A package that connects to JDBC SQL Server databases."
+description: "A package that connects to JDBC SQL Server databases is a software component that provides the necessary functionality to establish and manage a connection between a Java application and a Microsoft SQL Server database using the Java Database Connectivity (JDBC) API."
 version: 1.0.0
 homepage: "https://github.com/bijithpn/sql_connection_package"
 
