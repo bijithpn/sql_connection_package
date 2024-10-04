@@ -73,6 +73,11 @@ The `sql_connection` plugin empowers you to seamlessly execute SQL queries and p
 await sqlConnection.disconnect();
 ```
 
+## Examples
+
+<img src="https://github.com/bijithpn/sql_connection_package/blob/6bf70a84ff8fc3c27019639dbe2eac599ed0e921/screenshots/1.png?raw=true" alt="Connection Establishing screen" width="300"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<img src="https://github.com/bijithpn/sql_connection_package/blob/6bf70a84ff8fc3c27019639dbe2eac599ed0e921/screenshots/2.png?raw=true" alt="Read & write Operations" width="300"/>
+
 ## Caution: Security Considerations
 
 **Direct database connections can pose security risks. It's strongly recommended to use an API or middleware layer to handle database interactions and protect sensitive information.**
