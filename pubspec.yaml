@@ -1,7 +1,7 @@
 name: sql_connection
-description: "A new Flutter plugin project."
-version: 0.0.1
-homepage: "/"
+description: "A package that connects to JDBC SQL Server databases."
+version: 1.0.0
+homepage: "https://github.com/bijithpn/sql_connection_package"
 
 environment:
   sdk: ^3.5.3
