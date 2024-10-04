@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_json_view/flutter_json_view.dart';
 
 import 'package:sql_connection/sql_connection.dart';
 
@@ -25,8 +23,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-        debugShowCheckedModeBanner: false, home: HomPage());
+    return MaterialApp(
+        title: 'SQL Connection Example',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        debugShowCheckedModeBanner: false,
+        home: const HomPage());
   }
 }
 
@@ -46,48 +50,197 @@ class _HomPageState extends State<HomPage> {
       password = '',
       databaseName = '',
       readQuery = '',
-      writeQuery = '';
-  final _sqlConnection = SqlConnection.getInstance();
+      writeQuery = '',
+      result = '';
+
   final pageController = PageController();
+  final sqlConnection = SqlConnection.getInstance();
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    sqlConnection.disconnect();
+    super.dispose();
+  }
+
+  void connect() async {
+    var connectionStatus = await sqlConnection.connect(
+        ip: ip,
+        port: port,
+        databaseName: databaseName,
+        username: username,
+        password: password);
+    if (connectionStatus) {
+      showSnackBar(
+        "Connection Established",
+      );
+      pageController.nextPage(
+          duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+    } else {
+      showSnackBar(
+        "Connection Failed",
+      );
+    }
+  }
+
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+    ));
+  }
+
+  void execute(String s, BuildContext context) async {
+    try {
+      if (s == "Read") {
+        if (readQuery.isEmpty) {
+          showSnackBar("Empty query");
+          return;
+        }
+        showProgress();
+        result = await sqlConnection.getData(readQuery);
+        hideProgress();
+      } else {
+        if (writeQuery.isEmpty) {
+          showSnackBar("Empty query");
+          return;
+        }
+        showProgress();
+        result = await sqlConnection.writeData(writeQuery);
+        hideProgress();
+      }
+      setState(() {});
+    } on PlatformException catch (e) {
+      hideProgress();
+      showSnackBar(
+        e.message ?? "",
+      );
+    }
+  }
+
+  void showProgress() async => await showDialog(
+        context: context,
+        builder: (context) => Center(
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const CircularProgressIndicator(),
+          ),
+        ),
+      );
+
+  void hideProgress() {
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SQL Connection Example'),
+        elevation: 5,
+        backgroundColor: Theme.of(context).primaryColor,
+        title: Text(
+          'SQL Connection Example',
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge!
+              .copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                sqlConnection.disconnect();
+                pageController.animateToPage(0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut);
+              },
+              icon: const Icon(
+                Icons.link_off,
+                size: 30,
+                color: Colors.white,
+              ))
+        ],
       ),
-      body: PageView(
-        controller: pageController,
-        children: [
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(children: [
-                Row(children: [
-                  Flexible(
-                      child: customTextField("IP address",
-                          onchanged: (p0) => ip = p0,
-                          keyboardType: TextInputType.number)),
-                  const SizedBox(width: 10),
-                  Flexible(
-                      child: customTextField("Port",
-                          onchanged: (p0) => port = p0,
-                          keyboardType: TextInputType.number))
+      body: Form(
+        key: _formKey,
+        child: PageView(
+          controller: pageController,
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                child: Column(children: [
+                  Row(children: [
+                    Flexible(
+                        child: CustomTextField(
+                            title: "IP address",
+                            onchanged: (p0) => ip = p0,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[\d\.]'),
+                              ),
+                            ],
+                            keyboardType: TextInputType.number)),
+                    const SizedBox(width: 10),
+                    Flexible(
+                        child: CustomTextField(
+                            title: "Port",
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(4)
+                            ],
+                            onchanged: (p0) => port = p0,
+                            keyboardType: TextInputType.number))
+                  ]),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    title: "Database Name",
+                    keyboardType: TextInputType.text,
+                    onchanged: (p0) => databaseName = p0,
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    keyboardType: TextInputType.text,
+                    title: "Username",
+                    onchanged: (p0) => username = p0,
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    keyboardType: TextInputType.text,
+                    title: "Password",
+                    onchanged: (p0) => password = p0,
+                  ),
+                  const SizedBox(height: 15.0),
+                  ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                              Theme.of(context).primaryColor),
+                          shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)))),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          connect();
+                        }
+                      },
+                      child: Text(
+                        "Connect",
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                      ))
                 ]),
-                customTextField("Database Name",
-                    onchanged: (p0) => databaseName = p0),
-                customTextField("Username", onchanged: (p0) => username = p0),
-                customTextField("Password", onchanged: (p0) => password = p0),
-                const SizedBox(height: 15.0),
-                FloatingActionButton.extended(
-                    onPressed: connect, label: const Text("Connect"))
-              ]),
+              ),
             ),
-          ),
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Card(
                     child: Padding(
@@ -104,10 +257,11 @@ class _HomPageState extends State<HomPage> {
                                   icon: const Icon(Icons.play_arrow_rounded))
                             ],
                           ),
-                          customTextField('query',
-                              onchanged: (p0) => readQuery = p0,
-                              autovalidateMode: false,
-                              enableLabel: false)
+                          CustomTextField(
+                            title: 'query',
+                            onchanged: (p0) => readQuery = p0,
+                            autovalidateMode: false,
+                          )
                         ],
                       ),
                     ),
@@ -128,161 +282,72 @@ class _HomPageState extends State<HomPage> {
                                   icon: const Icon(Icons.play_arrow_rounded))
                             ],
                           ),
-                          customTextField('query',
-                              onchanged: (p0) => writeQuery = p0,
-                              autovalidateMode: false,
-                              enableLabel: false)
+                          CustomTextField(
+                            title: 'query',
+                            onchanged: (p0) => writeQuery = p0,
+                            autovalidateMode: false,
+                          )
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Response",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: JsonView.string(result),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
 
-  TextFormField customTextField(String title,
-          {void Function(String)? onchanged,
-          TextInputType? keyboardType,
-          bool autovalidateMode = true,
-          bool enableLabel = true}) =>
-      TextFormField(
-        autocorrect: true,
-        autovalidateMode:
-            autovalidateMode ? AutovalidateMode.onUserInteraction : null,
-        inputFormatters: [
-          if (title == "IP address")
-            FilteringTextInputFormatter.allow(RegExp(r'[\d\.]')),
-          if (title == "Port") ...[
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(4)
-          ]
-        ],
-        keyboardType: keyboardType,
-        onChanged: onchanged,
-        decoration: InputDecoration(
-            border: title == "Port" || title == "IP address"
-                ? const OutlineInputBorder()
-                : null,
-            hintText: "Enter $title ${title == "Port" ? "number" : ""}",
-            labelText: enableLabel ? title : null),
-        validator: (value) {
-          if (value!.isEmpty) {
-            return "Please Enter $title";
-          }
-          return null;
-        },
-      );
+class CustomTextField extends StatelessWidget {
+  const CustomTextField({
+    super.key,
+    this.onchanged,
+    this.autovalidateMode = true,
+    this.keyboardType,
+    required this.title,
+    this.inputFormatters,
+  });
 
-  connect() async {
-    if (ip.isEmpty ||
-        port.isEmpty ||
-        databaseName.isEmpty ||
-        username.isEmpty ||
-        password.isEmpty) {
-      toastMessage("Please enter all fields", color: Colors.redAccent);
+  final void Function(String)? onchanged;
+  final bool autovalidateMode;
+  final TextInputType? keyboardType;
+  final String title;
+  final List<TextInputFormatter>? inputFormatters;
 
-      return;
-    }
-    print('''$ip
-        $port
-        $databaseName
-        $username
-        $password''');
-    _sqlConnection
-        .connect(
-            ip: ip,
-            port: port,
-            databaseName: databaseName,
-            username: username,
-            password: password)
-        .then((value) {
-      if (value) {
-        toastMessage("Connection Established", color: Colors.green);
-        pageController.nextPage(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut);
-      } else {
-        toastMessage("Connection Failed", color: Colors.redAccent);
-      }
-    });
-  }
-
-  Future<bool?> toastMessage(String message,
-      {Color color = Colors.blueAccent}) {
-    return Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        timeInSecForIosWeb: 1,
-        backgroundColor: color,
-        textColor: Colors.white,
-        fontSize: 16.0);
-  }
-
-  execute(String s, BuildContext context) async {
-    try {
-      if (s == "Read") {
-        if (readQuery.isEmpty) {
-          toastMessage("Empty query", color: Colors.redAccent);
-          return;
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      autocorrect: true,
+      autovalidateMode:
+          autovalidateMode ? AutovalidateMode.onUserInteraction : null,
+      inputFormatters: inputFormatters,
+      keyboardType: keyboardType,
+      onChanged: onchanged,
+      decoration: InputDecoration(
+          border: const OutlineInputBorder(),
+          hintText: "Enter $title",
+          labelText: title),
+      validator: (value) {
+        if (value!.isEmpty) {
+          return "Please Enter $title";
         }
-        print(readQuery);
-        showProgress(context);
-        var startTime = DateTime.now();
-        var result = await _sqlConnection.getData(readQuery);
-        var difference = DateTime.now().difference(startTime);
-        if (!mounted) return;
-        hideProgress(context);
-        print(
-            "Duration: $difference and RecordCount:${jsonDecode(result).length}");
-        toastMessage(
-            "Please check the console for data.\n Duration: $difference");
-      } else {
-        if (writeQuery.isEmpty) {
-          toastMessage("Empty query", color: Colors.redAccent);
-          return;
-        }
-        showProgress(context);
-        var startTime = DateTime.now();
-        var result = await _sqlConnection.writeData(writeQuery);
-        var difference = DateTime.now().difference(startTime);
-        if (!mounted) return;
-        hideProgress(context);
-        print("Duration: ${DateTime.now().difference(startTime)} ");
-        print(result.toString());
-        toastMessage(
-            "Please check the console for data.\n Duration: $difference");
-      }
-    } on PlatformException catch (e) {
-      hideProgress(context);
-      toastMessage(e.message ?? "", color: Colors.redAccent);
-    }
-  }
-
-  showProgress(BuildContext context,
-          [String alertMessage = "Fetching Data..."]) async =>
-      await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-                content: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox.square(
-                        dimension: 35, child: CircularProgressIndicator()),
-                    const SizedBox(width: 12),
-                    Text(
-                      alertMessage,
-                      style: const TextStyle(fontSize: 20),
-                    )
-                  ],
-                ),
-              ));
-
-  hideProgress(BuildContext context) {
-    Navigator.pop(context);
+        return null;
+      },
+    );
   }
 }
