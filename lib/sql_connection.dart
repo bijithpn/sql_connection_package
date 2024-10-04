@@ -51,9 +51,9 @@ class SqlConnection {
   ///
   /// Parameters:
   /// - [query]: SQL query to retrieve data.
-  Future<String> getData(String query) {
+  Future<String> queryDatabase(String query) {
     try {
-      return SqlConnectionPlatform.instance.getData(query);
+      return SqlConnectionPlatform.instance.queryDatabase(query);
     } catch (e) {
       rethrow;
     }
@@ -63,9 +63,9 @@ class SqlConnection {
   ///
   /// Parameters:
   /// - [query]: SQL query to write data.
-  Future<String> writeData(String query) {
+  Future<String> updateData(String query) {
     try {
-      return SqlConnectionPlatform.instance.writeData(query);
+      return SqlConnectionPlatform.instance.updateData(query);
     } catch (e) {
       rethrow;
     }

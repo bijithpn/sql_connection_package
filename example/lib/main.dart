@@ -99,7 +99,7 @@ class _HomPageState extends State<HomPage> {
           return;
         }
         showProgress();
-        result = await sqlConnection.getData(readQuery);
+        result = await sqlConnection.queryDatabase(readQuery);
         hideProgress();
       } else {
         if (writeQuery.isEmpty) {
@@ -107,7 +107,7 @@ class _HomPageState extends State<HomPage> {
           return;
         }
         showProgress();
-        result = await sqlConnection.writeData(writeQuery);
+        result = await sqlConnection.updateData(writeQuery);
         hideProgress();
       }
       setState(() {});
@@ -175,28 +175,24 @@ class _HomPageState extends State<HomPage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
                 child: Column(children: [
-                  Row(children: [
-                    Flexible(
-                        child: CustomTextField(
-                            title: "IP address",
-                            onchanged: (p0) => ip = p0,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[\d\.]'),
-                              ),
-                            ],
-                            keyboardType: TextInputType.number)),
-                    const SizedBox(width: 10),
-                    Flexible(
-                        child: CustomTextField(
-                            title: "Port",
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(4)
-                            ],
-                            onchanged: (p0) => port = p0,
-                            keyboardType: TextInputType.number))
-                  ]),
+                  CustomTextField(
+                      title: "IP address",
+                      onchanged: (p0) => ip = p0,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[\d\.]'),
+                        ),
+                      ],
+                      keyboardType: TextInputType.number),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                      title: "Port",
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(4)
+                      ],
+                      onchanged: (p0) => port = p0,
+                      keyboardType: TextInputType.number),
                   const SizedBox(height: 10),
                   CustomTextField(
                     title: "Database Name",
@@ -297,12 +293,13 @@ class _HomPageState extends State<HomPage> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 10),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: JsonView.string(result),
+                  if (result.isNotEmpty)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: JsonView.string(result),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

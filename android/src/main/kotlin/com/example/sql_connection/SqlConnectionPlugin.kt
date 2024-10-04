@@ -54,8 +54,8 @@ class SqlConnectionPlugin : FlutterPlugin, MethodCallHandler {
         CoroutineScope(Dispatchers.IO).launch {
             when (call.method) {
               "connectDb" -> connect(call, result)
-              "getData" -> getData(call, result)
-              "writeData" ->writeData(call, result)
+              "queryDatabase" -> getData(call, result)
+              "updateData" ->writeData(call, result)
               "disconnect" -> disconnect(result)
               else -> result.notImplemented()
             }

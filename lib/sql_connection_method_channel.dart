@@ -36,10 +36,10 @@ class MethodChannelSqlConnection extends SqlConnectionPlatform {
   }
 
   @override
-  Future<String> getData(String query) async {
+  Future<String> queryDatabase(String query) async {
     try {
-      final result =
-          await methodChannel.invokeMethod<List>('getData', {'query': query});
+      final result = await methodChannel
+          .invokeMethod<List>('queryDatabase', {'query': query});
       return result == null ? "" : "[${result.join(",")}]";
     } catch (e) {
       rethrow;
@@ -47,10 +47,10 @@ class MethodChannelSqlConnection extends SqlConnectionPlatform {
   }
 
   @override
-  Future<String> writeData(String query) async {
+  Future<String> updateData(String query) async {
     try {
       final String? result = await methodChannel
-          .invokeMethod<String>('writeData', {'query': query});
+          .invokeMethod<String>('updateData', {'query': query});
       return result ?? '';
     } catch (e) {
       rethrow;

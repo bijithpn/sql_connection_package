@@ -37,10 +37,10 @@ abstract class SqlConnectionPlatform extends PlatformInterface {
   });
 
   /// Retrieves data from the database using the specified SQL query.
-  Future<String> getData(String query);
+  Future<String> queryDatabase(String query);
 
   /// Writes data to the database using the specified SQL query.
-  Future<String> writeData(String query);
+  Future<String> updateData(String query);
 
   /// Disconnects from the MS SQL Server database.
   Future<bool> disconnect();
