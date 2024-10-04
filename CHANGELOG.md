@@ -1,3 +1,9 @@
+## 1.0.1
+
+### Added
+
+- Description Updated
+
 ## 1.0.0
 
 ### Added

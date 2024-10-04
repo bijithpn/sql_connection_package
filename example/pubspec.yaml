@@ -1,6 +1,5 @@
 name: sql_connection_example
 description: "Demonstrates how to use the sql_connection plugin."
-
 publish_to: "none"
 
 environment:
